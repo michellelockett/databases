@@ -6,7 +6,7 @@ module.exports = {
       console.log('Messages get received by models');
     }, // a function which produces all the messages
     post: function (message) {
-      db.messagePost(message.username, message.message, message.roomname);
+      db.messagePost(message.username, message.message, message.roomname, function(){});
       // console.log('the model received the message: ', message);
     } // a function which can be used to insert a message into the database/
   },
@@ -18,7 +18,7 @@ module.exports = {
     },
     post: function (user) {
       // console.log('the model received the user: ', user);
-      db.userPost(user.username);
+      db.userPost(user.username, function(){});
 
     }
   }
