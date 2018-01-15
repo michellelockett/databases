@@ -4,6 +4,7 @@
 var mysql = require('mysql');
 var request = require('request'); // You might need to npm install the request module!
 var expect = require('chai').expect;
+var db = require('../db');
 
 describe('Persistent Node Chat Server', function() {
   var dbConnection;
@@ -12,15 +13,17 @@ describe('Persistent Node Chat Server', function() {
     dbConnection = mysql.createConnection({
       user: 'root',
       password: '',
-      database: 'chat'
+      database: 'chat',
+      multipleStatements: true
     });
     dbConnection.connect();
 
-       var tablename = ""; // TODO: fill this out
+    var tablename = 'messages'; // TODO: fill this out
 
     /* Empty the db table before each test so that multiple tests
      * (or repeated runs of the tests) won't screw each other up: */
-    dbConnection.query('truncate ' + tablename, done);
+    dbConnection.query('SET FOREIGN_KEY_CHECKS=0; truncate users; truncate messages; truncate rooms; truncate friends; SET FOREIGN_KEY_CHECKS=1; ', done);
+
   });
 
   afterEach(function() {
@@ -41,7 +44,7 @@ describe('Persistent Node Chat Server', function() {
         json: {
           username: 'Valjean',
           message: 'In mercy\'s name, three days is all I need.',
-          roomname: 'Hello'
+          roomname: 'main'
         }
       }, function () {
         // Now if we look in the database, we should find the
@@ -57,7 +60,7 @@ describe('Persistent Node Chat Server', function() {
           expect(results.length).to.equal(1);
 
           // TODO: If you don't have a column named text, change this test.
-          expect(results[0].text).to.equal('In mercy\'s name, three days is all I need.');
+          expect(results[0].messageText).to.equal('In mercy\'s name, three days is all I need.');
 
           done();
         });
@@ -67,23 +70,32 @@ describe('Persistent Node Chat Server', function() {
 
   it('Should output all messages from the DB', function(done) {
     // Let's insert a message into the db
-       var queryString = "";
-       var queryArgs = [];
+
+    db.userPost('chickenface', function() {
+
+      db.messagePost('chickenface', 'You have the face of a chicken.', 'main', function() {
+
+        request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+          var messageLog = JSON.parse(body);
+          expect(messageLog[0].text).to.equal('Men like you can never change!');
+          expect(messageLog[0].roomname).to.equal('main');
+          done();
+        });
+
+
+      });
+    });
+
+
+
     // TODO - The exact query string and query args to use
     // here depend on the schema you design, so I'll leave
     // them up to you. */
 
-    dbConnection.query(queryString, queryArgs, function(err) {
-      if (err) { throw err; }
 
-      // Now query the Node chat server and see if it returns
-      // the message we just inserted:
-      request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
-        var messageLog = JSON.parse(body);
-        expect(messageLog[0].text).to.equal('Men like you can never change!');
-        expect(messageLog[0].roomname).to.equal('main');
-        done();
-      });
-    });
+    // Now query the Node chat server and see if it returns
+    // the message we just inserted:
+
+    // });
   });
 });

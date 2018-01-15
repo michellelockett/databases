@@ -2,40 +2,40 @@ CREATE DATABASE chat;
 
 USE chat;
 
-CREATE TABLE messages (
-  /* Describe your table here.*/
-  objectId INT AUTO_INCREMENT PRIMARY KEY,
-  userId INT,
-  FOREIGN KEY (userId)
-    REFERENCES users(userId),
-  messageText VARCHAR(140),
-  roomID INT,
-  FOREIGN KEY (roomID)
-    REFERENCES rooms(roomID),
-  createdAt DATE,
-  updatedAt DATE
-);
-
 CREATE TABLE users (
   /* Describe your table here.*/
-  userId INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(20), createdAt DATE
+  userId INT AUTO_INCREMENT,
+  username VARCHAR(20) UNIQUE,
+  createdAt DATE,
+  PRIMARY KEY(userId)
 );
 
 CREATE TABLE friends (
-  userId INT,
-  friendId INT,
-  FOREIGN KEY (userId)
-    REFERENCES users(userId),
-  FOREIGN KEY (userId)
-    REFERENCES users(userId),
+  user_id INT,
+  friend_id INT,
+  FOREIGN KEY (user_id) REFERENCES users(userId),
+  FOREIGN KEY (friend_id) REFERENCES users(userId)
 );
 
 CREATE TABLE rooms (
-  roomID INT,
-  roomname VARCHAR(20)
+  roomId INT AUTO_INCREMENT,
+  roomname VARCHAR(20),
+  PRIMARY KEY(roomId)
 );
 
-user SMALLINT UNSIGNED NOT NULL REFERENCES users(id),
+CREATE TABLE messages (
+  /* Describe your table here.*/
+  objectId INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  createdAt DATE,
+  updatedAt DATE,
+  messageText VARCHAR(140),
+  room_id INT,
+  PRIMARY KEY(objectId),
+  FOREIGN KEY (user_id) REFERENCES users(userId),
+  FOREIGN KEY (room_id) REFERENCES rooms(roomId)
+);
+
 
 /* Create other tables and define schemas for them here! */
 
