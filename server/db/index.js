@@ -29,7 +29,7 @@ var userPost = function(username, callback) {
 
   connection.query(user, queryArgs, function(err, rows, fields) {
     if (err) {
-      throw err;
+      console.log(err);
     } else {
       callback();
     }

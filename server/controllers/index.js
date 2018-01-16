@@ -1,4 +1,5 @@
 var models = require('../models');
+var qs = require('query-string');
 
 module.exports = {
   messages: {
@@ -11,19 +12,33 @@ module.exports = {
 
     // a function which handles posting a message to the database
     post: function (req, res) {
-      models.messages.post(req.body);
-      res.end('sucessful post for messages');
+      var message = '';
+      req.on('data', function(chunk) {
+        message += chunk;
+      });
+      req.on('end', function() {
+        models.messages.post(qs.parse(message));
+        res.end('successful post for messages');
+      });
     }
   },
 
   users: {
     // Ditto as above
     get: function (req, res) {
-      models.users.get();
+      models.users.get(function(users) {
+        res.end(JSON.stringify(users));
+      });
     },
     post: function (req, res) {
-      models.users.post(req.body);
-      res.end('successful post for users');
+      var user = '';
+      req.on('data', function(chunk) {
+        user += chunk;
+      });
+      req.on('end', function() {
+        models.users.post(user);
+        res.end('successful post for users');
+      });
     }
   },
 
@@ -33,8 +48,14 @@ module.exports = {
       models.rooms.get();
     },
     post: function (req, res) {
-      models.rooms.post(req.body);
-      res.end('successful post for users');
+      var roomname = '';
+      req.on('data', function(chunk) {
+        roomname += chunk;
+      });
+      req.on('end', function() {
+        models.rooms.post(roomname);
+        res.end('successful post for rooms');
+      });
     }
   }
 };

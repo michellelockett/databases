@@ -8,16 +8,20 @@ module.exports = {
       });
     },
     post: function (message) {
-      db.messagePost(message.username, message.message, message.roomname, function(){});
+      db.messagePost(message.username, message.messageText, message.roomname, function(){});
     }
   },
 
   users: {
-    get: function () {
+    get: function (callback) {
+      db.getUsers(function(users) {
+        callback(users);
+      });
       console.log('Users get received by models');
     },
     post: function (user) {
-      db.userPost(user.username, function(){});
+      console.log(user);
+      db.userPost(user, function(){});
     }
   },
 
@@ -25,8 +29,8 @@ module.exports = {
     get: function () {
       console.log('Rooms get received by models ');
     },
-    post: function (room) {
-      db.roomPost(room.roomname, function(){});
+    post: function (roomname) {
+      db.roomPost(roomname, function(){});
     }
   }
 };
