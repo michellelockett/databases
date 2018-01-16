@@ -2,24 +2,31 @@ var db = require('../db');
 
 module.exports = {
   messages: {
-    get: function () {
-      console.log('Messages get received by models');
-    }, // a function which produces all the messages
+    get: function (callback) {
+      db.getMessages(function(messages){
+        callback(messages);
+      });
+    },
     post: function (message) {
       db.messagePost(message.username, message.message, message.roomname, function(){});
-      // console.log('the model received the message: ', message);
-    } // a function which can be used to insert a message into the database/
+    }
   },
 
   users: {
-    // Ditto as above.
     get: function () {
       console.log('Users get received by models');
     },
     post: function (user) {
-      // console.log('the model received the user: ', user);
       db.userPost(user.username, function(){});
+    }
+  },
 
+  rooms: {
+    get: function () {
+      console.log('Rooms get received by models ');
+    },
+    post: function (room) {
+      db.roomPost(room.roomname, function(){});
     }
   }
 };
