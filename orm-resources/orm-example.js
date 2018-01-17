@@ -20,6 +20,7 @@ var Message = db.define('Message', {
   roomname: Sequelize.STRING
 });
 
+
 /* Sequelize comes with built in support for promises
  * making it easy to chain asynchronous operations together */
 User.sync()
