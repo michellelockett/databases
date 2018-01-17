@@ -8,7 +8,7 @@ module.exports = {
       });
     },
     post: function (message) {
-      db.messagePost(message, function(){});
+      db.messagePost(message.username, message.messageText, message.roomname, function(){});
     }
   },
 
@@ -17,10 +17,11 @@ module.exports = {
       db.getUsers(function(users) {
         callback(users);
       });
+      console.log('Users get received by models');
     },
     post: function (user) {
       console.log(user);
-      return db.userPost(user);
+      db.userPost(user, function(){});
     }
   },
 

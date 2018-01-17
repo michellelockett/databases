@@ -17,7 +17,6 @@ module.exports = {
         message += chunk;
       });
       req.on('end', function() {
-        console.log('FROM THE CONTROLLER', qs.parse(message));
         models.messages.post(qs.parse(message));
         res.end('successful post for messages');
       });
@@ -37,7 +36,7 @@ module.exports = {
         user += chunk;
       });
       req.on('end', function() {
-        models.users.post(user)
+        models.users.post(user);
         res.end('successful post for users');
       });
     }

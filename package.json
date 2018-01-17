@@ -24,7 +24,7 @@
     "mysql": "^2.15.0",
     "query-string": "^5.0.1",
     "request": "^2.69.0",
-    "sequelize": "^3.21.0"
+    "sequelize": "^3.31.1"
   },
   "devDependencies": {
     "babel-cli": "^6.7.5",

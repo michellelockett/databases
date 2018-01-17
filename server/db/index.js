@@ -1,74 +1,79 @@
 var mysql = require('mysql');
+var connection = require('../../orm-resources/orm-chatter.js');
+var Sequelize = require('sequelize');
 
-var connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'chat'
-});
-connection.connect();
-
-var messagePost = function(username, messageText, roomname, callback) {
-
-  var userQ = '(SELECT userId FROM users WHERE username = \'' + username + '\')';
-  var roomQ = '(SELECT roomId FROM rooms WHERE roomname = \'' + roomname + '\')';
-  var insert = 'INSERT INTO messages (objectId, user_id, createdAt, updatedAt, messageText, room_id) VALUES(NULL, ' + userQ + ', NOW(), NULL, ' + mysql.escape(messageText) + ', ' + roomQ + ')';
-
-  connection.query(insert, function(err, rows, fields) {
-    if (err) {
-      throw err;
-    } else {
-      callback();
-    }
-  });
-};
-
-var userPost = function(username, callback) {
-  var user = 'INSERT INTO users (userId, username, createdAt) VALUES(NULL, \'' + username + '\', NOW())';
-  var queryArgs = [];
-
-  connection.query(user, queryArgs, function(err, rows, fields) {
-    if (err) {
+var userPost = function(user) {
+  connection.User.sync()
+    .then(function() {
+      return connection.User.create({username: user});
+      //connection.db.close();
+    })
+    .catch(function(err) {
       console.log(err);
-    } else {
-      callback();
-    }
+      //connection.db.close();
+    });
+}
+
+var roomPost = function(room) {
+  connection.Room.sync()
+  .then(function() {
+    return connection.Room.create({roomname: room});
+    // connection.db.close();
+  })
+  .catch(function(err) {
+    console.log(err);
+    //connection.db.close();
   });
-};
+}
 
-var roomPost = function(roomname, callback) {
-  var room = 'INSERT INTO rooms (roomId, roomname) VALUES(NULL, \'' + roomname + '\')';
-  var queryArgs = [];
+var getMessages = function(callback) {
+  connection.Message.sync()
+    .then(function() {
+      return connection.db.query("SELECT * FROM Messages");
+    })
+    .then(function(messages) {
+      //connection.db.close();
+      callback(messages);
+    })
+    .catch(function(error) {
+      console.log(error);
+      // connection.db.close();
+    });
+}
 
-  connection.query(room, queryArgs, function(err, rows, fields) {
-    if (err) {
-      throw err;
-    } else {
-      callback();
-    }
-  });
-};
+var messagePost = function(message) {
+  // console.log(message);
+  connection.Message.sync()
+    .then(function() {
+      var userId = connection.User.findAll({
+        attributes: ['id'],
+        where: {
+          username: message.username
+        }
+      })
 
-var getMessages = function (callback) {
+      var roomId = connection.Room.findAll({
+        attributes: ['id'],
+        where: {
+          roomname: message.roomname
+        }
+      })
+      var result = [roomId, userId];
+      return Sequelize.Promise.all(result);
+    })
+    .then(function(ids) {
 
-  var query = 'SELECT m.objectId, m.createdAt, m.updatedAt, m.messageText, u.username, r.roomname FROM messages m inner join users u on (m.user_id = u.userId) inner join rooms r on (r.roomId = m.room_id);';
-  var queryArgs = [];
-
-  connection.query(query, queryArgs, function(err, rows, fields) {
-    if (err) {
-      throw err;
-    } else {
-      callback(rows);
-    }
-  });
-};
-
-// Create a database connection and export it from this file.
-// You will need to connect with the user "root", no password,
-// and to the database "chat".
+      console.log('<<<<<<<<<<<<<<<<<<<IN MESSAGE POST>>>>>>>>>>>>>>>>>>>>>>>');
+      console.log(ids[0].dataValues, ids[1].dataValues);
+      return connection.Message.create({messageText: message.messageText, user_id: ids[1], room_id: ids[0]});
+      // connection.db.close();
+    })
+    .catch(function(err) {
+      console.log(err);
+    });
+}
 
 exports.roomPost = roomPost;
 exports.getMessages = getMessages;
-exports.connection = connection;
 exports.messagePost = messagePost;
 exports.userPost = userPost;
