@@ -22,7 +22,6 @@ module.exports = {
 
       req.on('end', function() {
         message = qs.parse(message);
-        console.log('FROM THE CONTROLLER', message);
 
         Promise.all([
           connection.User.findAll({ where: { username: message.username }}),
@@ -36,10 +35,10 @@ module.exports = {
             return connection.Message.create({ messageText: message.messageText, roomname: message.roomname, username: message.username, UserId: UserId, RoomId: RoomId });
           })
           .then(function(mess) {
-            var data = message.dataValues;
-            console.log(data);
+            
             message.objectId = mess.objectId;
             message.createdAt = mess.createdAt;
+
             res.end(JSON.stringify(message));
           })
           .catch(function(err) {
@@ -52,6 +51,10 @@ module.exports = {
   users: {
     // Ditto as above
     get: function (req, res) {
+      connection.User.findAll()
+        .then(function(users){
+          res.end(JSON.stringify(users));
+        });
 
     },
     post: function (req, res) {
@@ -71,7 +74,10 @@ module.exports = {
   rooms: {
     // Ditto as above
     get: function (req, res) {
-      models.rooms.get();
+      connection.Room.findAll()
+        .then(function(rooms){
+          res.end(JSON.stringify(rooms));
+        });
     },
     post: function (req, res) {
       var room = '';
