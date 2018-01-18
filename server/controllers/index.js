@@ -1,13 +1,16 @@
 var models = require('../models');
+var connection = require('../../orm-resources/orm-chatter.js');
+var Sequelize = require('sequelize');
 var qs = require('query-string');
 
 module.exports = {
   messages: {
     // a function which handles a get request for all messages
     get: function (req, res) {
-      models.messages.get(function(messages){
-        res.end(JSON.stringify(messages));
-      });
+      connection.Message.findAll()
+        .then(function(messages){
+          res.end(JSON.stringify(messages));
+        });
     },
 
     // a function which handles posting a message to the database
@@ -16,10 +19,32 @@ module.exports = {
       req.on('data', function(chunk) {
         message += chunk;
       });
+
       req.on('end', function() {
-        console.log('FROM THE CONTROLLER', qs.parse(message));
-        models.messages.post(qs.parse(message));
-        res.end('successful post for messages');
+        message = qs.parse(message);
+        console.log('FROM THE CONTROLLER', message);
+
+        Promise.all([
+          connection.User.findAll({ where: { username: message.username }}),
+          connection.Room.findAll({ where: { roomname: message.roomname }})
+        ])
+          .then(function(promises) {
+
+            var UserId = promises[0][0].dataValues.id;
+            var RoomId = promises[1][0].dataValues.id;
+
+            return connection.Message.create({ messageText: message.messageText, roomname: message.roomname, username: message.username, UserId: UserId, RoomId: RoomId });
+          })
+          .then(function(mess) {
+            var data = message.dataValues;
+            console.log(data);
+            message.objectId = mess.objectId;
+            message.createdAt = mess.createdAt;
+            res.end(JSON.stringify(message));
+          })
+          .catch(function(err) {
+            console.log(err);
+          });
       });
     }
   },
@@ -27,9 +52,7 @@ module.exports = {
   users: {
     // Ditto as above
     get: function (req, res) {
-      models.users.get(function(users) {
-        res.end(JSON.stringify(users));
-      });
+
     },
     post: function (req, res) {
       var user = '';
@@ -37,8 +60,10 @@ module.exports = {
         user += chunk;
       });
       req.on('end', function() {
-        models.users.post(user)
-        res.end('successful post for users');
+        connection.User.findOrCreate({where: {username: user}})
+          .spread(function(user, wasCreated){
+            res.end('successful post for user: ', JSON.stringify(user));
+          });
       });
     }
   },
@@ -49,13 +74,19 @@ module.exports = {
       models.rooms.get();
     },
     post: function (req, res) {
-      var roomname = '';
+      var room = '';
       req.on('data', function(chunk) {
-        roomname += chunk;
+        room += chunk;
       });
       req.on('end', function() {
-        models.rooms.post(roomname);
-        res.end('successful post for rooms');
+      connection.Room.findOrCreate({where: {roomname: room}})
+        .spread(function(room, wasCreated) {
+          if (wasCreated) {
+            res.end('created new room');
+          } else {
+            res.end('this room exists');
+          }
+        });
       });
     }
   }
